@@ -31,17 +31,18 @@ def get_pr_diff(pr_number: str) -> str:
         print(f"Command failed with error: {e.stderr}")
 
 @mcp.prompt(
-    description="Generate a code review prompt for a pull request diff with specific file and line feedback"
+    description="Generate a code review prompt given a PR number to provide file and line feedback"
 )
-def review_pr(diff: str) -> str:
+def review_pr(pr_number: str) -> str:
     """Create a prompt to review PR changes with detailed, line-specific comments.
     
     Args:
-        diff: Unified diff string from PR
+        pr_number: Unified diff string from PR
         
     Returns:
         Formatted review prompt with embedded diff
     """
+    diff = get_pr_diff(pr_number)
     prompt = "Review the PR and nitpick, for each comment/suggestion, include file and line number"
     return f"{prompt}```diff\n{diff}\n```"
 
