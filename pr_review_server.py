@@ -49,8 +49,8 @@ async def create_pending_review(pr_number: str, comments: list):
     Post a review comment to a specific line in a GitHub PR.
     """
     # TODO update these
-    owner = "lmchoi"
-    repo = "the-nitpicker"
+    owner = "doccla"
+    repo = "patient-referral-service"
     
     logger.info(f"Comments: {comments}")
 
