@@ -20,11 +20,7 @@ class MCPClient:
         self.client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
     async def connect_to_server(self):
-        """Connect to an MCP server
-        
-        Args:
-            server_script_path: Path to the server script (.py or .js)
-        """
+        """Connect to an MCP server."""
 
         command = "np-server"
         server_params = StdioServerParameters(
