@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 from typing import Optional
 from contextlib import AsyncExitStack
@@ -19,13 +20,15 @@ class MCPClient:
         self.exit_stack = AsyncExitStack()
         self.client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
-    async def connect_to_server(self):
+    async def connect_to_server(self, repo_url: Optional[str] = None):
         """Connect to an MCP server."""
 
         command = "np-server"
         server_params = StdioServerParameters(
             command=command,
-            env=None
+            env={
+                "GH_REPO": repo_url
+            }
         )
 
         stdio_transport = await self.exit_stack.enter_async_context(stdio_client(server_params))
@@ -64,6 +67,17 @@ class MCPClient:
         ]
 
     async def review_pr(self, pr_number: str):
+        """Orchestrates an AI-powered review of a pull request.
+
+        This method retrieves a prompt for reviewing a specific PR, sends it to
+        the Gemini model for analysis, and then processes the model's response.
+        It's designed to execute any function calls (tools) suggested by the
+        AI to perform the review and then prints the results.
+
+        Args:
+            pr_number: The pull request number to review.
+        """
+
         prompt_response = await self.session.get_prompt(
             name="review_pr",
             arguments={
@@ -104,16 +118,27 @@ class MCPClient:
         await self.exit_stack.aclose()
 
 async def main():
-    import sys
-    if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} <PR_NUMBER>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="nitpick: a PR reviewer"
+    )
+    parser.add_argument(
+        "--repo-path",
+        type=str,
+        required=None,
+        help="The full path to the local repository clone."
+    )
+    parser.add_argument(
+        "--pr-number",
+        type=str,
+        required=True,
+        help="The pull request number."
+    )
+    args = parser.parse_args()
 
-    pr_number = sys.argv[1]
     client = MCPClient()
     try:
-        await client.connect_to_server()
-        await client.review_pr(pr_number)
+        await client.connect_to_server(repo_url=args.repo_path)
+        await client.review_pr(pr_number=args.pr_number)
     finally:
         await client.cleanup()
 

@@ -1,7 +1,9 @@
 import json
 import logging
 from mcp.server.fastmcp import FastMCP
+import os
 import subprocess
+from typing import Optional
 
 mcp = FastMCP("PrReviewServer")
 
@@ -39,7 +41,8 @@ def get_pr_diff(pr_number: str) -> str:
         return result.stdout.strip()
 
     except subprocess.CalledProcessError as e:
-        print(f"Command failed with error: {e.stderr}")
+        logger.error(f"Command {e.cmd} failed with error: {e.stderr}")
+        return ""
 
 @mcp.tool(
     description="Create a pending review for a pull request"
@@ -48,35 +51,45 @@ async def create_pending_review(pr_number: str, comments: list):
     """
     Post a review comment to a specific line in a GitHub PR.
     """
-    # TODO update these
-    owner = "lmchoi"
-    repo = "the-nitpicker"
-    
+
+    logger.info(f"GH_REPO: {os.environ.get("GH_REPO")}")
     logger.info(f"Comments: {comments}")
 
     payload = {
         "comments": comments
     }
-    
-    json_payload = json.dumps(payload)
 
-    command = ["gh", "api", "--method", "POST"]
-    command += ["-H", "Accept: application/vnd.github+json"]
-    command += ["-H", "X-GitHub-Api-Version: 2022-11-28"]
-    command += [f"/repos/{owner}/{repo}/pulls/{pr_number}/reviews"]
-    command += ["--input", "-"]
+    command = ["gh", "api", "/repos/{owner}/{repo}"]
 
     try:
         result = subprocess.run(
             command,
-            input=json_payload,
             capture_output=True,
             text=True,
-            check=True
+            check=True,
+            # cwd="/home/bokchoi/alt-f-this"
         )
+        logger.info(result.stdout)
+    # json_payload = json.dumps(payload)
+
+    # command = ["gh", "api", "--method", "POST"]
+    # command += ["-H", "Accept: application/vnd.github+json"]
+    # command += ["-H", "X-GitHub-Api-Version: 2022-11-28"]
+    # command += [f"/repos/{{owner}}/{{repo}}/pulls/{pr_number}/reviews"]
+    # command += ["--input", "-"]
+
+    # try:
+    #     subprocess.run(
+    #         command,
+    #         input=json_payload,
+    #         capture_output=True,
+    #         text=True,
+    #         check=True,
+    #         # cwd="/home/bokchoi/alt-f-this"
+    #     )
     except subprocess.CalledProcessError as e:
         logger.error(f"gh API call failed. Status Code: {e.returncode}")
-        logger.error(f"Command executed: {' '.join(command)}")
+        logger.error(f"Command executed: {e.cmd}")
         logger.error(f"Stderr: {e.stderr}")
         logger.error(f"Output: {e.output}")
         
@@ -85,7 +98,7 @@ async def create_pending_review(pr_number: str, comments: list):
 @mcp.prompt(
     description="Generate a code review prompt given a PR number to provide file and line feedback"
 )
-def review_pr(pr_number: str) -> str:
+def review_pr(pr_number: str, repo_path: Optional[str] = None) -> str:
     """Create a prompt to review PR changes with detailed, line-specific comments.
     
     Args:
