@@ -13,15 +13,27 @@ You'll need the following installed and configured on your system:
 
 ## Getting Started
 
-First, install the dependencies with:
+Navigate to the project directory and install the application in editable mode:
 
 ```bash
-uv sync
+uv pip install -e .
 ```
 
 Create a `.env` configuration file in you working directory containing your API key.
 
 ```
 GOOGLE_API_KEY=<gemini api key>
+```
+
+To nitpick a pull request:
+
+```
+nitpick --repo-path <path-to-your-repo> --pr-number <pr-number>
+```
+
+Example:
+
+```Bash
+nitpick --repo-path /Users/mickey/projects/my-git-repo --pr-number 123
 ```
 
