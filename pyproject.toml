@@ -1,11 +1,17 @@
 [project]
 name = "the-nitpicker"
 version = "0.1.0"
-description = "Add your description here"
+description = "Adds comments to Pull Requests for you to approve"
 readme = "README.md"
+authors = [
+  { name="Mandy Choi", email="hello@mandychoi.com.au" },
+]
 requires-python = ">=3.13"
 dependencies = [
     "google-genai>=1.31.0",
     "mcp[cli]>=1.13.1",
     "requests>=2.32.5",
 ]
+[project.scripts]
+nitpick = "pr_review_client:run_cli_tool"
+np-server = "pr_review_server:main"
