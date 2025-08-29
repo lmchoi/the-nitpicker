@@ -19,17 +19,16 @@ class MCPClient:
         self.exit_stack = AsyncExitStack()
         self.client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
-    async def connect_to_server(self, server_script_path: str):
+    async def connect_to_server(self):
         """Connect to an MCP server
         
         Args:
             server_script_path: Path to the server script (.py or .js)
         """
 
-        command = "python"
+        command = "np-server"
         server_params = StdioServerParameters(
             command=command,
-            args=[server_script_path],
             env=None
         )
 
@@ -117,10 +116,15 @@ async def main():
     pr_number = sys.argv[1]
     client = MCPClient()
     try:
-        await client.connect_to_server("/home/bokchoi/Workspace/the-nitpicker/pr_review_server.py")
+        await client.connect_to_server()
         await client.review_pr(pr_number)
     finally:
         await client.cleanup()
 
-if __name__ == "__main__":
+# Synchronous wrapper for the command-line entry point
+def run_cli_tool():
     asyncio.run(main())
+
+if __name__ == "__main__":
+    run_cli_tool()
+
